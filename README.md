@@ -1,6 +1,6 @@
 # go-garbled
 
-[![GoDoc](https://godoc.org/github.com/JoelOtter/go-garbled?status.svg)](http://godoc.org/github.com/JoelOtter/go-garbled)
+![[Travis CI](https://travis-ci.org/JoelOtter/go-garbled)](https://travis-ci.org/JoelOtter/go-garbled.svg?branch=master) [![GoDoc](https://godoc.org/github.com/JoelOtter/go-garbled?status.svg)](http://godoc.org/github.com/JoelOtter/go-garbled)
 
 Evaluator for Yao's Garbled Circuits in Go.
 
