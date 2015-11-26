@@ -8,8 +8,8 @@ func AndGate(left, right Gate) *BinaryGate {
 		Name:  "AND",
 		Left:  left,
 		Right: right,
-		EvalFunc: func(left, right bool) bool {
-			return left && right
+		EvalFunc: func(left, right uint) uint {
+			return left & right
 		},
 	}
 }
@@ -22,8 +22,8 @@ func OrGate(left, right Gate) *BinaryGate {
 		Name:  "OR",
 		Left:  left,
 		Right: right,
-		EvalFunc: func(left, right bool) bool {
-			return left || right
+		EvalFunc: func(left, right uint) uint {
+			return left | right
 		},
 	}
 }
@@ -36,8 +36,8 @@ func XorGate(left, right Gate) *BinaryGate {
 		Name:  "XOR",
 		Left:  left,
 		Right: right,
-		EvalFunc: func(left, right bool) bool {
-			return left != right
+		EvalFunc: func(left, right uint) uint {
+			return left ^ right
 		},
 	}
 }
@@ -50,8 +50,8 @@ func NandGate(left, right Gate) *BinaryGate {
 		Name:  "NAND",
 		Left:  left,
 		Right: right,
-		EvalFunc: func(left, right bool) bool {
-			return !(left && right)
+		EvalFunc: func(left, right uint) uint {
+			return 1 & ^(left & right)
 		},
 	}
 }
@@ -64,8 +64,8 @@ func NorGate(left, right Gate) *BinaryGate {
 		Name:  "NOR",
 		Left:  left,
 		Right: right,
-		EvalFunc: func(left, right bool) bool {
-			return !(left || right)
+		EvalFunc: func(left, right uint) uint {
+			return 1 & ^(left | right)
 		},
 	}
 }
@@ -78,8 +78,8 @@ func XnorGate(left, right Gate) *BinaryGate {
 		Name:  "XNOR",
 		Left:  left,
 		Right: right,
-		EvalFunc: func(left, right bool) bool {
-			return left == right
+		EvalFunc: func(left, right uint) uint {
+			return 1 & ^(left ^ right)
 		},
 	}
 }
@@ -91,8 +91,8 @@ func NotGate(input Gate) *UnaryGate {
 	return &UnaryGate{
 		Name:  "NOT",
 		Input: input,
-		EvalFunc: func(val bool) bool {
-			return !val
+		EvalFunc: func(val uint) uint {
+			return 1 & ^val
 		},
 	}
 }

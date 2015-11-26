@@ -32,11 +32,11 @@ func BuildCircuit() *g.Circuit {
 
 func main() {
 	c := BuildCircuit()
-	inputs := map[string]bool{
-		"A": false,
-		"B": false,
-		"C": false,
-		"D": false,
+	inputs := map[string]uint{
+		"A": 0,
+		"B": 1,
+		"C": 1,
+		"D": 0,
 	}
 	out := c.Evaluate(inputs)
 	fmt.Println(out)
