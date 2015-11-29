@@ -22,7 +22,7 @@ func BuildCircuit() *g.Circuit {
 		),
 		g.OrGate(
 			g.AndGate(g.NotGate(a), d),
-			g.AndGate(g.NotGate(c), b),
+			g.AndGate(b, g.NotGate(c)),
 		),
 	)
 	cr.AddOutput("O2", o2)
@@ -32,11 +32,11 @@ func BuildCircuit() *g.Circuit {
 
 func main() {
 	c := BuildCircuit()
-	inputs := map[string]uint{
-		"A": 0,
-		"B": 1,
-		"C": 1,
-		"D": 0,
+	inputs := map[string]uint32{
+		"A": 1,
+		"B": 0,
+		"C": 0,
+		"D": 1,
 	}
 	out := c.Evaluate(inputs)
 	fmt.Println(out)

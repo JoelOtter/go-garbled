@@ -1,98 +1,85 @@
 package garbled
 
+import (
+	"crypto/sha1"
+	"encoding/binary"
+	"math/rand"
+)
+
+// A Gate represents any binary or unary gate.
 type Gate interface {
-	Evaluate() uint
+	Evaluate() uint32
+	Circuit() *Circuit
+	GetOutput() *Wire
 }
 
-type EncryptionFunc func(uint, uint) uint
+// A CryptoFunc is any function that takes a value and a key and
+// returns an encrypted or decrypted value.
+type CryptoFunc func(uint32, uint32) uint32
 
-// Circuit struct for whole circuit
-type Circuit struct {
-	Name      string            // a user-readable circuit name
-	Inputs    map[string]*Input // a map of input names to input 'gates'
-	Outputs   map[string]Gate   // a map of output names to gates
-	Encryptor EncryptionFunc    // the function used for encryption. Takes a number and a key
+func generateKey() uint32 {
+	r := uint16(rand.Uint32())
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, r)
+	sum := sha1.Sum(b)
+	bytes := []byte{sum[0], sum[1], b[0], b[1]}
+	return binary.BigEndian.Uint32(bytes)
 }
 
-// NewCircuit creates a new Circuit with its
-// name as a string argument.
-// Returns a pointer to a new Circuit.
-func NewCircuit(name string) *Circuit {
-	c := Circuit{
-		Name:    name,
-		Inputs:  make(map[string]*Input),
-		Outputs: make(map[string]Gate),
+func decryptionValid(key uint32) bool {
+	b := make([]byte, 4)
+	binary.BigEndian.PutUint32(b, key)
+	sum := sha1.Sum(b[2:])
+	if sum[0] == b[0] && sum[1] == b[1] {
+		return true
 	}
-	return &c
+	return false
 }
 
-// AddInput registers a new Input in the Circuit
-// with the provided name and value.
-// It returns a pointer to the Input.
-func (c *Circuit) AddInput(name string) *Input {
-	i := &Input{}
-	c.Inputs[name] = i
-	return i
+// A Wire represents the wire between two gates.
+// It has a key for 0 and a key for 1.
+type Wire struct {
+	Input  Gate
+	Output Gate
+	Keys   [2]uint32
 }
 
-// AddOutput registers a new Output in the Circuit
-// with the provided name.
-func (c *Circuit) AddOutput(name string, g Gate) {
-	c.Outputs[name] = g
-}
-
-// Evaluate will evaluate a whole circuit for the inputs specified
-// in the map 'inputs'. Returns a map of outputs to their values.
-//
-// E.g. For a circuit containing a single AND gate with
-// inputs A and B, and one output O, the map:
-// {"A": false, "B": true}
-// will evaluate to:
-// {"O": false}.
-func (c *Circuit) Evaluate(inputs map[string]uint) map[string]uint {
-	for k, v := range inputs {
-		c.Inputs[k].Value = v
+// NewWire returns a pointer to a new wire with randomised keys.
+func NewWire(input Gate) *Wire {
+	return &Wire{
+		Input: input,
+		Keys:  [2]uint32{generateKey(), generateKey()},
 	}
-	outputs := make(map[string]uint)
-	for k, v := range c.Outputs {
-		outputs[k] = v.Evaluate()
-	}
-	return outputs
+}
+
+// Evaluate uses a Wire's input gate to return a value.
+func (w *Wire) Evaluate() uint32 {
+	return w.Input.Evaluate()
+}
+
+// Circuit returns a pointer to the Circuit the Wire is in.
+func (w *Wire) Circuit() *Circuit {
+	return w.Input.Circuit()
 }
 
 // Input 'gate', used to supply inputs to the circuit.
 type Input struct {
-	Value uint
+	Value   uint32
+	circuit *Circuit // a pointer back to the Circuit
+	Output  *Wire    // the output wire
 }
 
 // Evaluate returns the Input's value.
-func (i *Input) Evaluate() uint {
-	return i.Value
+func (i *Input) Evaluate() uint32 {
+	return i.Output.Keys[i.Value]
 }
 
-// Binary gate
-type BinaryGate struct {
-	Name     string                // a user-readable name
-	Left     Gate                  // the gate on the 'left' input
-	Right    Gate                  // the gate on the 'right' input
-	EvalFunc func(uint, uint) uint // the function to evaluate the inputs
+// Circuit returns a pointer to the Circuit the Input is in.
+func (i *Input) Circuit() *Circuit {
+	return i.circuit
 }
 
-// Evaluate will use the left and right inputs to produce
-// the appropriate output value.
-func (b *BinaryGate) Evaluate() uint {
-	return b.EvalFunc(b.Left.Evaluate(), b.Right.Evaluate())
-}
-
-// Unary gate
-type UnaryGate struct {
-	Name     string          // a user-readable name
-	Input    Gate            // the gate used for input
-	EvalFunc func(uint) uint // the function to evaulate the input
-}
-
-// Evaluate will use the input to produce
-// the appropriate output value.
-func (g *UnaryGate) Evaluate() uint {
-	return g.EvalFunc(g.Input.Evaluate())
+// GetOutput returns a pointer to the Input's output wire.
+func (i *Input) GetOutput() *Wire {
+	return i.Output
 }
