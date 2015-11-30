@@ -13,6 +13,8 @@ Supports gates:
 - NOR
 - XNOR
 
+Tests for these gates are located in `gates_test.go`, and can be run by doing `go test` in the root directory.
+
 The aim is for ease of use and extensibility.
 
 ### Examples
