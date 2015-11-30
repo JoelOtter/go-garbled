@@ -15,6 +15,10 @@ Supports gates:
 
 The aim is for ease of use and extensibility.
 
+### Examples
+
+**max.go** - A circuit which determines the maximum of two 2-bit numbers. To evaluate for all possible inputs, navigate to the `_examples/` directory and run `go test`.
+
 ### Keys
 
 Keys have the type uint32, but are in fact effectively 31-bit numbers. The most significant bit is a space left for the p-value which is to be encrypted along with the key. Keys are generated randomly, so it's not really necessary for a user to care about this detail.
