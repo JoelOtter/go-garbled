@@ -17,6 +17,6 @@ The aim is for ease of use and extensibility.
 
 ### Keys
 
-Keys are formatted as 32-bit unsigned integers. The least significant 16 bits are the key itself, and the most significant 16 bits are a SHA-1 checksum.
+Keys have the type uint32, but are in fact effectively 31-bit numbers. The most significant bit is a space left for the p-value which is to be encrypted along with the key. Keys are generated randomly, so it's not really necessary for a user to care about this detail.
 
-The default encryption method is simply XOR between plaintext and key. Users can modify this themselves by adjusting the `Encryptor` field on the `Circuit` struct. An encryption/decryption function should maintain the checksum/key format.
+The default encryption method is simply XOR between plaintext and key. Users can modify this themselves by adjusting the `Encryptor` field on the `Circuit` struct.

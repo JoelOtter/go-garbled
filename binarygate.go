@@ -1,31 +1,31 @@
 package garbled
 
-import "math/rand"
-import "fmt"
-
 // Binary gate
 type BinaryGate struct {
-	Name         string    // a user-readable name
-	Left         *Wire     // the wire on the 'left' input
-	Right        *Wire     // the wire on the 'right' input
-	Output       *Wire     // the output wire
-	GarbledTable [4]uint32 // garbled table
+	Name         string         // a user-readable name
+	Left         *Wire          // the wire on the 'left' input
+	Right        *Wire          // the wire on the 'right' input
+	Output       *Wire          // the output wire
+	GarbledTable [2][2]uint32   // garbled table
+	Evaluator    BinaryEvalFunc // the function to evaluate the gate
 }
 
 // Evaluate will use the left and right inputs to produce
-// the appropriate output value.
-func (b *BinaryGate) Evaluate() uint32 {
-	keyL := b.Left.Evaluate()
-	keyR := b.Right.Evaluate()
+// the appropriate output key and p-value.
+func (b *BinaryGate) Evaluate() (uint32, uint32) {
+	keyL, pL := b.Left.Evaluate()
+	keyR, pR := b.Right.Evaluate()
+	encrypted := b.GarbledTable[pL][pR]
+
+	// Decrypt
 	c := b.Circuit()
-	for _, k := range b.GarbledTable {
-		res := c.Decryptor(c.Decryptor(k, keyL), keyR)
-		if decryptionValid(res) {
-			return res
-		}
-	}
-	fmt.Printf("Decryption error in gate %v\n", b.Name)
-	return 0
+	decrypted := c.Decryptor(
+		c.Decryptor(encrypted, keyR),
+		keyL,
+	)
+	pOut := decrypted >> 31              // MSB
+	keyOut := decrypted & ^uint32(1<<31) // all bits except MSB
+	return keyOut, pOut
 }
 
 // GetOutput returns a pointer to the gate's output wire.
@@ -38,31 +38,33 @@ func (b *BinaryGate) Circuit() *Circuit {
 	return b.Left.Circuit()
 }
 
-func (b *BinaryGate) generateGarbledTable(inputs [4]uint32) {
-	table := [4]uint32{}
-	table[0] = b.Circuit().Encryptor( // input 0, 0
-		b.Circuit().Encryptor(b.Output.Keys[inputs[0]], b.Left.Keys[0]),
-		b.Right.Keys[0],
-	)
-	table[1] = b.Circuit().Encryptor( // input 0, 1
-		b.Circuit().Encryptor(b.Output.Keys[inputs[1]], b.Left.Keys[0]),
-		b.Right.Keys[1],
-	)
-	table[2] = b.Circuit().Encryptor( // input 1, 0
-		b.Circuit().Encryptor(b.Output.Keys[inputs[2]], b.Left.Keys[1]),
-		b.Right.Keys[0],
-	)
-	table[3] = b.Circuit().Encryptor( // input 1, 1
-		b.Circuit().Encryptor(b.Output.Keys[inputs[3]], b.Left.Keys[1]),
-		b.Right.Keys[1],
-	)
+func (b *BinaryGate) generateGarbledTable() {
 
-	// Shuffle the table
-	for i := range inputs {
-		r := rand.Intn(4)
-		swap := table[r]
-		table[r] = table[i]
-		table[i] = swap
+	var table [2][2]uint32
+
+	inputs := [4][2]uint32{
+		[2]uint32{0, 0},
+		[2]uint32{0, 1},
+		[2]uint32{1, 0},
+		[2]uint32{1, 1},
+	}
+
+	for _, ins := range inputs {
+		x := ins[0] ^ b.Left.P
+		y := ins[1] ^ b.Right.P
+		z := b.Evaluator(x, y)
+		t := z ^ b.Output.P
+		keyOut := b.Output.Keys[z]
+		toEncrypt := keyOut | (t << 31) // MSB of key is t
+		keyR := b.Right.Keys[y]
+		keyL := b.Left.Keys[x]
+
+		// Encrypt
+		c := b.Circuit()
+		table[ins[0]][ins[1]] = c.Encryptor(
+			c.Encryptor(toEncrypt, keyR),
+			keyL,
+		)
 	}
 
 	b.GarbledTable = table

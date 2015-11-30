@@ -25,8 +25,11 @@ func makeUnaryGate(input *Wire) *UnaryGate {
 // as its evaluation function.
 func AndGate(left, right Gate) *BinaryGate {
 	g := makeBinaryGate(left.GetOutput(), right.GetOutput())
-	g.generateGarbledTable([4]uint32{0, 0, 0, 1})
 	g.Name = "AND"
+	g.Evaluator = func(left, right uint32) uint32 {
+		return left & right
+	}
+	g.generateGarbledTable()
 	return g
 }
 
@@ -35,8 +38,11 @@ func AndGate(left, right Gate) *BinaryGate {
 // as its evaluation function.
 func OrGate(left, right Gate) *BinaryGate {
 	g := makeBinaryGate(left.GetOutput(), right.GetOutput())
-	g.generateGarbledTable([4]uint32{0, 1, 1, 1})
 	g.Name = "OR"
+	g.Evaluator = func(left, right uint32) uint32 {
+		return left | right
+	}
+	g.generateGarbledTable()
 	return g
 }
 
@@ -45,8 +51,11 @@ func OrGate(left, right Gate) *BinaryGate {
 // as its evaluation function.
 func XorGate(left, right Gate) *BinaryGate {
 	g := makeBinaryGate(left.GetOutput(), right.GetOutput())
-	g.generateGarbledTable([4]uint32{0, 1, 1, 0})
 	g.Name = "XOR"
+	g.Evaluator = func(left, right uint32) uint32 {
+		return left ^ right
+	}
+	g.generateGarbledTable()
 	return g
 }
 
@@ -55,8 +64,11 @@ func XorGate(left, right Gate) *BinaryGate {
 // as its evaluation function.
 func NandGate(left, right Gate) *BinaryGate {
 	g := makeBinaryGate(left.GetOutput(), right.GetOutput())
-	g.generateGarbledTable([4]uint32{1, 1, 1, 0})
 	g.Name = "NAND"
+	g.Evaluator = func(left, right uint32) uint32 {
+		return 1 & ^(left & right)
+	}
+	g.generateGarbledTable()
 	return g
 }
 
@@ -65,8 +77,11 @@ func NandGate(left, right Gate) *BinaryGate {
 // as its evaluation function.
 func NorGate(left, right Gate) *BinaryGate {
 	g := makeBinaryGate(left.GetOutput(), right.GetOutput())
-	g.generateGarbledTable([4]uint32{1, 0, 0, 0})
 	g.Name = "NOR"
+	g.Evaluator = func(left, right uint32) uint32 {
+		return 1 & ^(left | right)
+	}
+	g.generateGarbledTable()
 	return g
 }
 
@@ -75,8 +90,11 @@ func NorGate(left, right Gate) *BinaryGate {
 // as its evaluation function.
 func XnorGate(left, right Gate) *BinaryGate {
 	g := makeBinaryGate(left.GetOutput(), right.GetOutput())
-	g.generateGarbledTable([4]uint32{1, 0, 0, 1})
 	g.Name = "XNOR"
+	g.Evaluator = func(left, right uint32) uint32 {
+		return 1 & ^(left ^ right)
+	}
+	g.generateGarbledTable()
 	return g
 }
 
@@ -85,7 +103,10 @@ func XnorGate(left, right Gate) *BinaryGate {
 // evaluation function.
 func NotGate(input Gate) *UnaryGate {
 	g := makeUnaryGate(input.GetOutput())
-	g.generateGarbledTable([2]uint32{1, 0})
 	g.Name = "NOT"
+	g.Evaluator = func(input uint32) uint32 {
+		return 1 & ^input
+	}
+	g.generateGarbledTable()
 	return g
 }

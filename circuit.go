@@ -49,23 +49,17 @@ func (c *Circuit) AddOutput(name string, g Gate) {
 //
 // E.g. For a circuit containing a single AND gate with
 // inputs A and B, and one output O, the map:
-// {"A": false, "B": true}
+// {"A": 0, "B": 1}
 // will evaluate to:
-// {"O": false}.
+// {"O": 0}.
 func (c *Circuit) Evaluate(inputs map[string]uint32) map[string]uint32 {
 	for k, v := range inputs {
 		c.Inputs[k].Value = v
 	}
 	outputs := make(map[string]uint32)
 	for k, v := range c.Outputs {
-		outputKey := v.Evaluate()
-		outputs[k] = outputKey
-		for i, key := range v.Keys {
-			if key == outputKey {
-				outputs[k] = uint32(i)
-				break
-			}
-		}
+		_, outputP := v.Evaluate()
+		outputs[k] = outputP ^ v.P
 	}
 	return outputs
 }
